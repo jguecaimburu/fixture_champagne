@@ -2,6 +2,7 @@
 
 require "bundler/gem_tasks"
 require "rake/testtask"
+require 'fixture_champagne'
 
 Rake::TestTask.new(:test) do |t|
   t.libs << "test"
@@ -14,3 +15,6 @@ require "rubocop/rake_task"
 RuboCop::RakeTask.new
 
 task default: %i[test rubocop]
+
+path = File.expand_path(__dir__)
+Dir.glob("#{path}/tasks/**/*.rake").each { |f| import f }
