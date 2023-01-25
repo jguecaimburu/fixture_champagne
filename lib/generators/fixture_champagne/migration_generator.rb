@@ -12,8 +12,16 @@ module FixtureChampagne
       desc "Generates a migration with the given NAME and a version."
 
       def generate_notification
-        template "migration.rb",
-                 "#{MigrationContext.fixture_migrations_path}/#{Migration.new_migration_version}#{file_name}.rb"
+        template "migration.rb", new_migration_filename
+      end
+
+      private
+
+      def new_migration_filename
+        fixture_migrations_path = FixtureChampagne::MigrationContext.fixture_migrations_path
+        new_migration_version = FixtureChampagne::Migration.new_migration_version
+        given_name = file_name
+        "#{fixture_migrations_path}/#{new_migration_version}#{given_name}.rb"
       end
     end
   end
