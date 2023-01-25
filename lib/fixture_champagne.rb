@@ -6,7 +6,7 @@ module FixtureChampagne
   require "fixture_champagne/railtie" if defined?(Rails)
 
   autoload :MigrationContext, "fixture_champagne/migration_context"
-  autoload :Migrator, "fixture_champagne/migration"
+  autoload :Migrator, "fixture_champagne/migrator"
   autoload :Migration, "fixture_champagne/migration"
 
   class IllegalMigrationNameError < StandardError

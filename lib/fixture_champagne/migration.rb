@@ -29,8 +29,6 @@ module FixtureChampagne
     Proxy = Struct.new(:name, :version, :filename) do
       def initialize(name, version, filename)
         super
-        @version = @version.to_i
-        @name = @name.camelize
         @migration = nil
       end
 

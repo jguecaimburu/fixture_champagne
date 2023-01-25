@@ -76,6 +76,8 @@ module FixtureChampagne
     end
 
     def pending_migrations
+      return migrations if fixtures_migration_version.nil?
+
       migrations.select { |m| m.version > fixtures_migration_version }
     end
 
@@ -84,7 +86,7 @@ module FixtureChampagne
         version, name = parse_migration_filename(file)
         raise IllegalMigrationNameError, file unless version
 
-        Migration::Proxy.new(name, version, file)
+        Migration::Proxy.new(name.camelize, version.to_i, file)
       end
 
       migrations.sort_by(&:version)
