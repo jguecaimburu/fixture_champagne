@@ -5,6 +5,10 @@ require_relative "fixture_champagne/version"
 module FixtureChampagne
   require "fixture_champagne/railtie" if defined?(Rails)
 
+  autoload :MigrationContext, "fixture_champagne/migration_context"
+  autoload :Migrator, "fixture_champagne/migration"
+  autoload :Migration, "fixture_champagne/migration"
+
   class IllegalMigrationNameError < StandardError
     def initialize(name = nil)
       if name

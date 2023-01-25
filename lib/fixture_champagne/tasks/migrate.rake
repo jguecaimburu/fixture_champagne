@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "fixture_champagne/migration_context"
+require "fixture_champagne"
 
 namespace :fixture_champagne do
   desc "Run Fixture Champagne migrations to update fixtures"
