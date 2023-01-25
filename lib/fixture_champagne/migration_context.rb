@@ -13,10 +13,13 @@ module FixtureChampagne
       end
 
       def fixture_migrations_path
-        path = test_suite_folder_path.join("fixture_migrations")
-        raise "No fixture_migrations folder found in test suite folder" unless path.exist?
+        raise "No fixture_migrations folder found in test suite folder" unless expected_fixture_migrations_path.exist?
 
-        path
+        expected_fixture_migrations_path
+      end
+
+      def expected_fixture_migrations_path
+        test_suite_folder_path.join("fixture_migrations")
       end
 
       def test_suite_folder_path

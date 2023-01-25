@@ -10,18 +10,20 @@ module FixtureChampagne
       end
     end
 
-    attr_reader :version
+    class Base
+      attr_reader :version
 
-    def initialize(version)
-      @version = version
-    end
+      def initialize(version)
+        @version = version
+      end
 
-    def announce
-      # TODO: Implement
-    end
+      def announce
+        # TODO: Implement
+      end
 
-    def migrate
-      # TODO: Implement
+      def migrate
+        # TODO: Implement
+      end
     end
 
     Proxy = Struct.new(:name, :version, :filename) do

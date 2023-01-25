@@ -1,0 +1,5 @@
+class <%= class_name %> < FixtureChampagne::Migration::Base
+  def change
+    # Create, update or destroy records here
+  end
+end
