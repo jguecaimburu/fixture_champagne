@@ -17,12 +17,8 @@ module FixtureChampagne
         @version = version
       end
 
-      def announce
-        # TODO: Implement
-      end
-
-      def migrate
-        # TODO: Implement
+      def migrate(direction)
+        send(direction)
       end
     end
 
@@ -36,7 +32,7 @@ module FixtureChampagne
         File.basename(filename)
       end
 
-      delegate :migrate, :announce, to: :migration
+      delegate :migrate, to: :migration
 
       private
 

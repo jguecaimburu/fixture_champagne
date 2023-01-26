@@ -7,8 +7,8 @@ module FixtureChampagne
         new(
           fixture_migrations_path: fixture_migrations_path,
           schema_current_version: schema_current_version,
-          fixtures_migration_version: fixture_versions["version"],
-          fixtures_schema_version: fixture_versions["schema_version"]
+          fixtures_migration_version: fixture_versions["version"]&.to_i || 0,
+          fixtures_schema_version: fixture_versions["schema_version"]&.to_i || 0
         ).migrate
       end
 
@@ -57,7 +57,7 @@ module FixtureChampagne
 
     def initialize(
       fixture_migrations_path:, schema_current_version:,
-      fixtures_migration_version: nil, fixtures_schema_version: nil
+      fixtures_migration_version:, fixtures_schema_version:
     )
       @fixture_migrations_path = fixture_migrations_path
       @schema_current_version = schema_current_version
@@ -67,21 +67,65 @@ module FixtureChampagne
 
     def migrate
       if pending_migrations.any?
-        Migrator.up(pending_migrations)
+        up
       elsif fixtures_schema_version != schema_current_version
-        Migrator.up([])
+        up
       else
         p "No fixture migrations pending."
       end
     end
 
-    def pending_migrations
-      return migrations if fixtures_migration_version.nil?
+    def rollback
+      if executed_migrations.any?
+        down
+      else
+        p "No migration to rollback."
+      end
+    end
 
+    def up
+      Migrator.new(
+        direction: :up,
+        migrations: pending_migrations,
+        target_migration_version: up_target_fixture_migration_version,
+        target_schema_version: schema_current_version
+      ).migrate
+    end
+
+    def down
+      Migrator.new(
+        direction: :down,
+        migrations: [executed_migrations.last],
+        target_migration_version: down_target_fixture_migration_version,
+        target_schema_version: schema_current_version
+      ).migrate
+    end
+
+    def up_target_fixture_migration_version
+      return fixtures_migration_version if pending_migrations.empty?
+
+      pending_migrations.map(:version).max
+    end
+
+    def down_target_fixture_migration_version
+      return 0 if executed_migrations.one?
+
+      executed_migrations.last(2).first.version
+    end
+
+    def pending_migrations
       migrations.select { |m| m.version > fixtures_migration_version }
     end
 
+    def executed_migrations
+      migrations.select { |m| m.version <= fixtures_migration_version }
+    end
+
     def migrations
+      @migrations ||= set_migrations
+    end
+
+    def set_migrations
       migrations = migration_files.map do |file|
         version, name = parse_migration_filename(file)
         raise IllegalMigrationNameError, file unless version

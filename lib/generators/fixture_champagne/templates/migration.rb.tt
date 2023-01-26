@@ -1,5 +1,9 @@
 class <%= class_name %> < FixtureChampagne::Migration::Base
-  def change
+  def up
     # Create, update or destroy records here
+  end
+
+  def down
+    # Optionally, reverse changes made by the :up method
   end
 end
