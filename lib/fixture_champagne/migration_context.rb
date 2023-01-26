@@ -66,9 +66,7 @@ module FixtureChampagne
     end
 
     def migrate
-      if pending_migrations.any?
-        up
-      elsif fixtures_schema_version != schema_current_version
+      if pending_migrations.any? || fixtures_schema_version != schema_current_version
         up
       else
         p "No fixture migrations pending."
@@ -104,7 +102,7 @@ module FixtureChampagne
     def up_target_fixture_migration_version
       return fixtures_migration_version if pending_migrations.empty?
 
-      pending_migrations.map(:version).max
+      pending_migrations.map(&:version).max
     end
 
     def down_target_fixture_migration_version

@@ -11,14 +11,33 @@ module FixtureChampagne
     end
 
     class Base
-      attr_reader :version
+      attr_reader :version, :migrator
 
       def initialize(version)
         @version = version
       end
 
-      def migrate(direction)
+      def migrate(direction:, migrator:)
+        @migrator = migrator
         send(direction)
+      end
+
+      private
+
+      def method_missing(name, *args, **kwargs, &block)
+        if migrator.pre_existing_fixture_accessors.include?(name.to_s)
+          migrator.send(name, *args, **kwargs, &block)
+        else
+          super
+        end
+      end
+
+      def respond_to_missing?(name, include_private = false)
+        if include_private && migrator.pre_existing_fixture_accessors.include?(name.to_s)
+          true
+        else
+          super
+        end
       end
     end
 
