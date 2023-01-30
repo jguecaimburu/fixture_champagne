@@ -8,7 +8,7 @@ module FixtureChampagne
     include ActiveRecord::TestFixtures
 
     included do
-      self.fixture_path = MigrationContext.test_suite_folder_path.join("fixtures")
+      self.fixture_path = MigrationContext.fixtures_path
       fixtures :all
     end
 

@@ -8,7 +8,8 @@ module FixtureChampagne
           fixture_migrations_path: fixture_migrations_path,
           schema_current_version: schema_current_version,
           fixtures_migration_version: fixture_versions["version"]&.to_i || 0,
-          fixtures_schema_version: fixture_versions["schema_version"]&.to_i || 0
+          fixtures_schema_version: fixture_versions["schema_version"]&.to_i || 0,
+          configuration: configuration
         ).migrate
       end
 
@@ -40,29 +41,43 @@ module FixtureChampagne
       end
 
       def fixture_versions
-        if fixture_versions_path.exist?
-          YAML.safe_load(fixture_versions_path)
-        else
-          {}
-        end
+        @fixture_versions ||= if fixture_versions_path.exist?
+                                YAML.safe_load(fixture_versions_path)
+                              else
+                                {}
+                              end
       end
 
       def fixture_versions_path
-        test_suite_folder_path.join(".fixture_versions.yml")
+        test_suite_folder_path.join(".fixture_champagne_versions.yml")
+      end
+
+      def configuration
+        @configuration ||= Configuration.new(configuration_path)
+      end
+
+      def configuration_path
+        test_suite_folder_path.join("fixture_champagne.yml")
+      end
+
+      def fixtures_path
+        test_suite_folder_path.join("fixtures")
       end
     end
 
     attr_reader :fixture_migrations_path, :schema_current_version,
-                :fixtures_migration_version, :fixtures_schema_version
+                :fixtures_migration_version, :fixtures_schema_version, :configuration
 
     def initialize(
       fixture_migrations_path:, schema_current_version:,
-      fixtures_migration_version:, fixtures_schema_version:
+      fixtures_migration_version:, fixtures_schema_version:,
+      configuration:
     )
       @fixture_migrations_path = fixture_migrations_path
       @schema_current_version = schema_current_version
       @fixtures_migration_version = fixtures_migration_version
       @fixtures_schema_version = fixtures_schema_version
+      @configuration = configuration
     end
 
     def migrate
@@ -86,7 +101,8 @@ module FixtureChampagne
         direction: :up,
         migrations: pending_migrations,
         target_migration_version: up_target_fixture_migration_version,
-        target_schema_version: schema_current_version
+        target_schema_version: schema_current_version,
+        configuration: configuration
       ).migrate
     end
 
@@ -95,7 +111,8 @@ module FixtureChampagne
         direction: :down,
         migrations: [executed_migrations.last],
         target_migration_version: down_target_fixture_migration_version,
-        target_schema_version: schema_current_version
+        target_schema_version: schema_current_version,
+        configuration: configuration
       ).migrate
     end
 
@@ -140,6 +157,31 @@ module FixtureChampagne
 
     def parse_migration_filename(filename)
       File.basename(filename).scan(Migration::MIGRATION_FILENAME_REGEXP).first
+    end
+
+    Configuration = Struct.new(:file_path) do
+      def initialize(file_path)
+        super
+        @configuration = if file_path.exist?
+                           YAML.safe_load(file_path)
+                         else
+                           {}
+                         end
+      end
+
+      def label_templates
+        @configuration["labels"] || {}
+      end
+
+      def overwrite_fixtures?
+        return true unless @configuration.key?("overwrite")
+
+        @configuration["overwrite"]
+      end
+
+      def overwrite_current_labels?
+        @configuration["overwrite_labels"]
+      end
     end
   end
 end
