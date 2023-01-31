@@ -170,7 +170,7 @@ module FixtureChampagne
       end
 
       def label_templates
-        @configuration["labels"] || {}
+        @configuration["label"] || {}
       end
 
       def overwrite_fixtures?
@@ -179,8 +179,12 @@ module FixtureChampagne
         @configuration["overwrite"]
       end
 
-      def overwrite_current_labels?
-        @configuration["overwrite_labels"]
+      def rename_fixtures?
+        @configuration["rename"]
+      end
+
+      def ignored_tables
+        @configuration["ignore"].to_a || []
       end
     end
   end

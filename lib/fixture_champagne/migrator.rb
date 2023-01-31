@@ -12,6 +12,14 @@ module FixtureChampagne
       def fixture_unique_id(table_name:, id:)
         "#{table_name}_#{id}"
       end
+
+      def tmp_fixtures_path
+        Rails.root.join("tmp", "fixtures")
+      end
+
+      def fixture_attachment_folders
+        %w[files active_storage action_text].map { |f| fixture_path.join(f) }
+      end
     end
 
     def initialize(
@@ -52,7 +60,24 @@ module FixtureChampagne
     end
 
     def create_fixture_files_from_test_db
-      new_fixtures = fixtureable_models.each_with_object({}) do |klass, hash|
+      klasses = fixtureable_models
+      fixtures_data = serialize_records(klasses)
+      create_new_fixture_files(klasses, fixtures_data)
+    end
+
+    def fixtureable_models
+      descendants = ApplicationRecord.descendants
+      descendants.filter(&:table_exists?).map do |descendant|
+        next if configuration.ignored_tables.include?(descendant.table_name.to_s)
+
+        table_ancestor = descendant
+        table_ancestor = table_ancestor.superclass while table_ancestor.superclass.table_exists?
+        table_ancestor
+      end.compact.uniq
+    end
+
+    def serialize_records(klasses)
+      data = klasses.each_with_object({}) do |klass, hash|
         table_name = klass.table_name.to_s
         raise "repeated table key for new fixtures, table #{table_name}, class: #{klass}" if hash.key?(table_name)
 
@@ -65,20 +90,17 @@ module FixtureChampagne
           hash[table_name][label] = fixture_serialized_attributes(record)
         end
       end
+
+      data.each_with_object({}) do |(table, table_data), sorted_data|
+        next if table_data.empty?
+
+        sorted_data[table] = table_data.sort.to_h
+      end
     end
 
     # Record id is built from fixture label via ActiveRecord::FixtureSet.identify
     def fixture_unique_id(fixture, fixture_set)
       self.class.fixture_unique_id(table_name: fixture_set.table_name, id: fixture.find.id)
-    end
-
-    def fixtureable_models
-      descendants = ApplicationRecord.descendants
-      descendants.filter(&:table_exists?).map do |descendant|
-        table_ancestor = descendant
-        table_ancestor = table_ancestor.superclass while table_ancestor.superclass.table_exists?
-        table_ancestor
-      end.uniq
     end
 
     def fixture_label(record)
@@ -89,7 +111,7 @@ module FixtureChampagne
       @labeler ||= Labeler.new(
         pre_existing_fixtures_labels: @pre_existing_fixtures_label_mapping,
         templates: configuration.label_templates,
-        overwrite: configuration.overwrite_current_labels?
+        rename: configuration.rename_fixtures?
       )
     end
 
@@ -101,17 +123,70 @@ module FixtureChampagne
       @serializer ||= Serializer.new(labeler: labeler)
     end
 
+    def create_new_fixture_files(klasses, fixtures_data)
+      setup_temporal_fixtures_dir
+      copy_fixture_attachments
+      klasses.each do |klass|
+        data = fixtures_data[klass.table_name]
+        filename = temporal_fixture_filename(klass)
+        create_temporal_fixture_file(data, filename)
+      end
+      return unless config.overwrite_fixtures?
+
+      overwrite_fixtures
+      remember_new_fixture_versions
+    end
+
+    def setup_temporal_fixtures_dir
+      FileUtils.rm_r(self.class.tmp_fixtures_path, secure: true) if self.class.tmp_fixtures_path.exist?
+      FileUtils.mkdir(self.class.tmp_fixtures_path)
+    end
+
+    def copy_fixture_attachments
+      self.class.fixture_attachment_folders.each do |folder|
+        FileUtils.cp_r(folder, self.class.tmp_fixtures_path)
+      end
+    end
+
+    def temporal_fixture_filename(klass)
+      parts = klass.to_s.split("::").map(&:underscore)
+      parts.last = parts.last.pluralize.concat(".yml")
+      self.class.tmp_fixtures_path.join(parts)
+    end
+
+    def create_temporal_fixture_file(data, filename)
+      FileUtils.mkdir_p(filename.dirname)
+      File.open(filename, "w") do |file|
+        yaml = YAML.dump(data).gsub(/\n(?=[^\s])/, "\n\n").delete_prefix("---\n\n")
+        file.write(yaml)
+      end
+    end
+
+    def overwrite_fixtures
+      removable_fixtures_path = self.class.fixtures_path.dirname.join("old_fixtures")
+      FileUtils.mv(self.class.fixtures_path, removable_fixtures_path)
+      FileUtils.mv(self.class.tmp_fixtures_path, self.class.fixtures_path)
+      FileUtils.rm_r(removable_fixtures_path, secure: true)
+    end
+
+    def remember_new_fixture_versions
+      File.open(MigrationContext.fixture_versions_path, "w") do |file|
+        yaml = YAML.dump({ "version" => target_migration_version, "schema_version" => target_schema_version })
+        file.write(yaml)
+      end
+    end
+
     class Labeler
       INTERPOLATION_PATTERN = /%\{([\w|]+)\}/.freeze
 
-      def initialize(pre_existing_fixtures_labels:, templates:, overwrite:)
+      def initialize(pre_existing_fixtures_labels:, templates:, rename:)
         @pre_existing_fixtures_labels = pre_existing_fixtures_labels
         @templates = templates
-        @overwrite = overwrite
+        @rename = rename
       end
 
       def label_for(record:)
-        if @overwrite
+        if @rename
           build_label_for(record)
         else
           find_label_for(record) || build_label_for(record)
@@ -191,7 +266,7 @@ module FixtureChampagne
           end
         end
 
-        serialized_attributes.to_h.except(*filtered_attributes)
+        serialized_attributes.sort.to_h.except(*filtered_attributes)
       end
     end
   end
