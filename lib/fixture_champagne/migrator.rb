@@ -13,7 +13,7 @@ module FixtureChampagne
         "#{table_name}_#{id}"
       end
 
-      def tmp_fixtures_path
+      def tmp_fixture_path
         Rails.root.join("tmp", "fixtures")
       end
 
@@ -48,7 +48,7 @@ module FixtureChampagne
       @pre_existing_fixtures_label_mapping = fixture_sets.each_with_object({}) do |fixture_set, mapping|
         fixture_set.fixtures.each do |label, fixture|
           unique_id = fixture_unique_id(fixture, fixture_set)
-          raise "repeated fixture for label #{label}, unique id #{unique_id}" if mapping.key?(unique_id)
+          raise RepeatedFixtureError, "repeated fixture in preprocess for label #{label}, unique id #{unique_id}" if mapping.key?(unique_id)
 
           mapping[unique_id] = label.to_s
         end
@@ -79,13 +79,13 @@ module FixtureChampagne
     def serialize_records(klasses)
       data = klasses.each_with_object({}) do |klass, hash|
         table_name = klass.table_name.to_s
-        raise "repeated table key for new fixtures, table #{table_name}, class: #{klass}" if hash.key?(table_name)
+        raise RepeatedFixtureError, "repeated table key for new fixtures, table #{table_name}, class: #{klass}" if hash.key?(table_name)
 
         hash[table_name] = {}
 
         klass.all.each do |record|
           label = fixture_label(record)
-          raise "repeated fixture for label #{label}, class #{klass}" if hash[table_name].key?(label)
+          raise RepeatedFixtureError, "repeated fixture in serialization for label #{label}, class #{klass}" if hash[table_name].key?(label)
 
           hash[table_name][label] = fixture_serialized_attributes(record)
         end
@@ -131,27 +131,27 @@ module FixtureChampagne
         filename = temporal_fixture_filename(klass)
         create_temporal_fixture_file(data, filename)
       end
-      return unless config.overwrite_fixtures?
+      return unless configuration.overwrite_fixtures?
 
       overwrite_fixtures
       remember_new_fixture_versions
     end
 
     def setup_temporal_fixtures_dir
-      FileUtils.rm_r(self.class.tmp_fixtures_path, secure: true) if self.class.tmp_fixtures_path.exist?
-      FileUtils.mkdir(self.class.tmp_fixtures_path)
+      FileUtils.rm_r(self.class.tmp_fixture_path, secure: true) if self.class.tmp_fixture_path.exist?
+      FileUtils.mkdir(self.class.tmp_fixture_path)
     end
 
     def copy_fixture_attachments
       self.class.fixture_attachment_folders.each do |folder|
-        FileUtils.cp_r(folder, self.class.tmp_fixtures_path)
+        FileUtils.cp_r(folder, self.class.tmp_fixture_path) if folder.exist?
       end
     end
 
     def temporal_fixture_filename(klass)
       parts = klass.to_s.split("::").map(&:underscore)
-      parts.last = parts.last.pluralize.concat(".yml")
-      self.class.tmp_fixtures_path.join(parts)
+      parts << parts.pop.pluralize.concat(".yml")
+      self.class.tmp_fixture_path.join(*parts)
     end
 
     def create_temporal_fixture_file(data, filename)
@@ -163,10 +163,10 @@ module FixtureChampagne
     end
 
     def overwrite_fixtures
-      removable_fixtures_path = self.class.fixtures_path.dirname.join("old_fixtures")
-      FileUtils.mv(self.class.fixtures_path, removable_fixtures_path)
-      FileUtils.mv(self.class.tmp_fixtures_path, self.class.fixtures_path)
-      FileUtils.rm_r(removable_fixtures_path, secure: true)
+      removable_fixture_path = self.class.fixture_path.dirname.join("old_fixtures")
+      FileUtils.mv(self.class.fixture_path, removable_fixture_path)
+      FileUtils.mv(self.class.tmp_fixture_path, self.class.fixture_path)
+      FileUtils.rm_r(removable_fixture_path, secure: true)
     end
 
     def remember_new_fixture_versions
@@ -218,15 +218,15 @@ module FixtureChampagne
       end
 
       def interpolate_template(template, record)
-        template.gsub(INTERPOLATION_PATTERN) do |_match|
+        template.gsub(INTERPOLATION_PATTERN) do
           attribute = ::Regexp.last_match(1).to_sym
-          value = if record.responds_to?(attribute)
+          value = if record.respond_to?(attribute)
                     record.send(attribute)
                   else
-                    raise "Missing attribute #{attribute} for record class #{record.class}"
+                    raise WrongFixtureLabelInterpolationError, attribute: attribute, klass: record.class
                   end
           value
-        end
+        end.parameterize(separator: "_")
       end
     end
 
@@ -254,19 +254,22 @@ module FixtureChampagne
             filtered_attributes << belongs_to_association.foreign_type.to_s
             foreign_type = record.send(belongs_to_association.foreign_type)
             associated_record = record.send(belongs_to_association.name)
-            [belongs_to_association.name, "#{labeler.label_for(record: associated_record)} (#{foreign_type})"]
+            [belongs_to_association.name.to_s, "#{labeler.label_for(record: associated_record)} (#{foreign_type})"]
           elsif belongs_to_association
             filtered_attributes << belongs_to_association.foreign_key.to_s
             associated_record = record.send(belongs_to_association.name)
-            [belongs_to_association.name, labeler.label_for(record: associated_record)]
+            [belongs_to_association.name.to_s, labeler.label_for(record: associated_record)]
+          elsif type.type == :datetime
+            # ActiveRecord::Type::DateTime#serialize returns a TimeWithZone object that makes the YAML dump less clear
+            [attribute, record.read_attribute_before_type_cast(attribute)]
           elsif type.respond_to?(:serialize)
             [attribute, type.serialize(value)]
           else
-            [attribute, type.to_s]
+            [attribute, value.to_s]
           end
         end
 
-        serialized_attributes.sort.to_h.except(*filtered_attributes)
+        serialized_attributes.sort_by(&:first).to_h.except(*filtered_attributes)
       end
     end
   end

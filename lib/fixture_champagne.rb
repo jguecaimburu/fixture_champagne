@@ -9,6 +9,14 @@ module FixtureChampagne
   autoload :Migrator, "fixture_champagne/migrator"
   autoload :Migration, "fixture_champagne/migration"
 
+  class RepeatedFixtureError < StandardError; end
+
+  class WrongFixtureLabelInterpolationError < StandardError
+    def initialize(error_data = {})
+      super("Missing attribute or method #{error_data[:attribute]} for record class #{error_data[:klass]}")
+    end
+  end
+
   class IllegalMigrationNameError < StandardError
     def initialize(name = nil)
       if name

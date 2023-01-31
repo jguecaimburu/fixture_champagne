@@ -4,13 +4,21 @@ module FixtureChampagne
   class MigrationContext
     class << self
       def migrate
+        build_context.migrate
+      end
+
+      def rollback
+        build_context.rollback
+      end
+
+      def build_context
         new(
           fixture_migrations_path: fixture_migrations_path,
           schema_current_version: schema_current_version,
           fixtures_migration_version: fixture_versions["version"]&.to_i || 0,
           fixtures_schema_version: fixture_versions["schema_version"]&.to_i || 0,
           configuration: configuration
-        ).migrate
+        )
       end
 
       def fixture_migrations_path
@@ -42,7 +50,7 @@ module FixtureChampagne
 
       def fixture_versions
         @fixture_versions ||= if fixture_versions_path.exist?
-                                YAML.safe_load(fixture_versions_path)
+                                YAML.load_file(fixture_versions_path)
                               else
                                 {}
                               end
@@ -81,7 +89,7 @@ module FixtureChampagne
     end
 
     def migrate
-      if pending_migrations.any? || fixtures_schema_version != schema_current_version
+      if pending_migrations.any? || fixtures_schema_version != schema_current_version || configuration.overwrite_fixtures?
         up
       else
         p "No fixture migrations pending."
@@ -163,7 +171,7 @@ module FixtureChampagne
       def initialize(file_path)
         super
         @configuration = if file_path.exist?
-                           YAML.safe_load(file_path)
+                           YAML.load_file(file_path)
                          else
                            {}
                          end
