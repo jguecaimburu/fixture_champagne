@@ -3,6 +3,11 @@
 # frozen_string_literal
 
 module FixtureChampagne
+  # TestFixtures allows access to a test database with fixtures preloaded and all fixture accessors.
+  #
+  # TestFixtures calls the ActiveRecord::TestDatabases to regenerate a test db and adapts the
+  # ActiveRecord::TestFixtures module to parse all pre existing fixtures and generate the required
+  # accessors.
   module TestFixtures
     extend ActiveSupport::Concern
     include ActiveRecord::TestFixtures
@@ -27,6 +32,10 @@ module FixtureChampagne
 
     def pre_existing_fixtures
       @loaded_fixtures
+    end
+
+    def pre_existing_fixture_sets
+      pre_existing_fixtures.map { |_k, v| v }
     end
 
     def pre_existing_fixture_accessors

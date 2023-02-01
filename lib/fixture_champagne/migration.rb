@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module FixtureChampagne
+  # Migration contain naming rules for migrations files and objects
   class Migration
     MIGRATION_FILENAME_REGEXP = /\A([0-9]+)_([_a-z0-9]*)\.rb\z/.freeze
 
@@ -10,6 +11,9 @@ module FixtureChampagne
       end
     end
 
+    # Migration::Base is the ancestor of generated fixture migrations.
+    #
+    # Inheriting from Base allows migrations to have access to fixture accessors.
     class Base
       attr_reader :version, :migrator
 

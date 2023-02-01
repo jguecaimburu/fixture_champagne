@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
 module FixtureChampagne
+  # MigrationContext sets the context in which a fixture migration is run.
+  #
+  # A migration context checks where the application files are located, which could be
+  # in /test if the app uses Minitest or /spec if the app uses Rspec, and from that base
+  # it decides where everything else is located:
+  # - Fixture migrations folder
+  # - Configuration YAML file
+  # - Saved versions YAML file
+  # - Fixtures path
+  #
+  # With all that it decides which migrations are pending, which are executed and the target
+  # versions. Depending on the method called, it also decides the direction the Migrator should execute.
   class MigrationContext
     class << self
       def migrate
@@ -22,7 +34,7 @@ module FixtureChampagne
       end
 
       def fixture_migrations_path
-        raise "No fixture_migrations folder found in test suite folder" unless expected_fixture_migrations_path.exist?
+        raise MissingMigrationsFolderError unless expected_fixture_migrations_path.exist?
 
         expected_fixture_migrations_path
       end
@@ -89,7 +101,8 @@ module FixtureChampagne
     end
 
     def migrate
-      if pending_migrations.any? || fixtures_schema_version != schema_current_version || configuration.overwrite_fixtures?
+      # If rename_fixtures? is set to true, the migration should run as some label could have changed.
+      if pending_migrations.any? || fixtures_schema_version != schema_current_version || configuration.rename_fixtures?
         up
       else
         p "No fixture migrations pending."
