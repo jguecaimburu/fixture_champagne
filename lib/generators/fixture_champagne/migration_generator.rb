@@ -4,6 +4,31 @@ require "rails/generators/named_base"
 
 module FixtureChampagne
   module Generators
+    # MigrationGenerator generates a new migration using the migration.rb.tt template.
+    #
+    # Ensure that a fixture_migrations folder exists in your test suite folder or create one
+    # running the install generator. This folder is set at FixtureChampagne::MigrationContext.fixture_migrations_path
+    # Then from your app directory you can run:
+    #
+    # bin/rails generate fixture_champagne:migration <new_migration_name>
+    #
+    # Where <new_migration_name> should be the name of your new migration. For example:
+    # bin/rails generate fixture_champagne:migration add_new_user
+    #
+    # Will generate fixture_migrations/20230126153650_add_new_user.rb with the following content:
+    #   class AddTurtle < FixtureChampagne::Migration::Base
+    #     def up
+    #       # Create, update or destroy records here
+    #     end
+    #
+    #     def down
+    #       # Optionally, reverse changes made by the :up method
+    #     end
+    #   end
+    #
+    # The generator automatically adds a version number to the new migration file, which is important
+    # to keep track of executed migrations. Also, the migration filename must correspond with the migration
+    # class inside the file.
     class MigrationGenerator < Rails::Generators::NamedBase
       include Rails::Generators::ResourceHelpers
 
