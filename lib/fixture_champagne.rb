@@ -10,7 +10,9 @@ module FixtureChampagne # :nodoc:
   autoload :Migration, "fixture_champagne/migration"
 
   class MissingMigrationsFolderError < StandardError # :nodoc:
-    super("No fixture_migrations folder found in test suite folder")
+    def initialize
+      super("No fixture_migrations folder found in test suite folder")
+    end
   end
 
   class RepeatedFixtureError < StandardError; end # :nodoc:
