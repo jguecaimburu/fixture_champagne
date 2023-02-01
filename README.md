@@ -171,13 +171,13 @@ initial_enemy:
 
 Setting the `rename` key to `true` will force every fixture label to follow the templates in the configuration. Default value is `false`. If any table is not configured, the default label will be used (something like `%{table_name}_%{id}` if `table_name` was an instance method).
 
-If `rename` is set to `true`, every time you run `migrate` or `rollback` all fixtures will be regenerated in the corresponding folder (depending on `overwrite`), even if there's no pending migrations or schema version is up to date. Keep in mind that a renaming might break the fixture accessors in your tests or previous migrations.
-
 ```yaml
 # test/fixture_champagne.yml
 
 rename: true
 ```
+
+If `rename` is set to `true`, every time you run `migrate` or `rollback` all fixtures will be regenerated in the corresponding folder (depending on `overwrite`), even if there's no pending migrations or schema version is up to date. Keep in mind that a renaming might break the fixture accessors in your tests or previous migrations. It could also break unsupported attachment fixtures.
 
 #### Ignore tables
 
@@ -206,6 +206,8 @@ On namespaced models, the migrator will create a folder for each level and a `.y
 
 If you use single table inheritance, then the file will correspond with the parent model, the owner of the table. For example, `class Weapon::Rocket < Weapon; end` will be saved in `fixtures/weapons.yml`.
 
+All fixtures files that correspond to attachments will be copied as they are. Those are the ones located in `fixtures/files`, `fixtures/active_storage` and `fixtures/action_text`.
+
 
 ## Features currently not supported
 
@@ -218,6 +220,10 @@ The following fixture features are not supported:
 - HABTM (`have_and_belong_to_many`) associations as inline lists
 - Support for YAML defaults (this could be nice)
 
+As stated before, at least for now, fixtures files that correspond to attachments will be copied as they are. This means:
+- This fixtures must be generated manually
+- This fixtures must be updated manually if other fixtures labels change
+- All this files will be left untouched
 
 ##  A few soft recommendations
 
