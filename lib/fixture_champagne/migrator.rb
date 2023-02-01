@@ -48,7 +48,10 @@ module FixtureChampagne
       @pre_existing_fixtures_label_mapping = fixture_sets.each_with_object({}) do |fixture_set, mapping|
         fixture_set.fixtures.each do |label, fixture|
           unique_id = fixture_unique_id(fixture, fixture_set)
-          raise RepeatedFixtureError, "repeated fixture in preprocess for label #{label}, unique id #{unique_id}" if mapping.key?(unique_id)
+          if mapping.key?(unique_id)
+            raise RepeatedFixtureError,
+                  "repeated fixture in preprocess for label #{label}, unique id #{unique_id}"
+          end
 
           mapping[unique_id] = label.to_s
         end
@@ -79,13 +82,19 @@ module FixtureChampagne
     def serialize_records(klasses)
       data = klasses.each_with_object({}) do |klass, hash|
         table_name = klass.table_name.to_s
-        raise RepeatedFixtureError, "repeated table key for new fixtures, table #{table_name}, class: #{klass}" if hash.key?(table_name)
+        if hash.key?(table_name)
+          raise RepeatedFixtureError,
+                "repeated table key for new fixtures, table #{table_name}, class: #{klass}"
+        end
 
         hash[table_name] = {}
 
         klass.all.each do |record|
           label = fixture_label(record)
-          raise RepeatedFixtureError, "repeated fixture in serialization for label #{label}, class #{klass}" if hash[table_name].key?(label)
+          if hash[table_name].key?(label)
+            raise RepeatedFixtureError,
+                  "repeated fixture in serialization for label #{label}, class #{klass}"
+          end
 
           hash[table_name][label] = fixture_serialized_attributes(record)
         end
