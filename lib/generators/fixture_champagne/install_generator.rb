@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rails/generators/base"
-
 module FixtureChampagne
   module Generators
     # InstallGenerator generates a the boilerplate necessary to use the gem.

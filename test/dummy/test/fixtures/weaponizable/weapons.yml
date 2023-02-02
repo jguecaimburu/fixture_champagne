@@ -1,0 +1,5 @@
+weaponizable_weapon_rocket_100:
+  power: 100
+  precision: 0.23
+  type: Weaponizable::Weapon::Rocket
+  weaponizable: purpy (Character::Turtle)

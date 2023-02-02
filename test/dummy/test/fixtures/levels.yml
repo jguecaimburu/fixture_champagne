@@ -1,0 +1,9 @@
+easy:
+  difficulty: easy
+  name: Initial
+  unlocked: true
+
+hard:
+  difficulty: hard
+  name: Final
+  unlocked: false

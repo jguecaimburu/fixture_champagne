@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# frozen_string_literal
-
 module FixtureChampagne
   # TestFixtures allows access to a test database with fixtures preloaded and all fixture accessors.
   #

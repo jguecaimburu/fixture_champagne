@@ -1,0 +1,8 @@
+overwrite: false
+rename: true
+ignore: []
+label:
+  character_turtles: "%{name}"
+  character_mushrooms: "%{name}"
+  levels: "%{difficulty}"
+  weaponizable_weapons: "%{type} %{power}"

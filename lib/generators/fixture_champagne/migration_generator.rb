@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rails/generators/named_base"
-
 module FixtureChampagne
   module Generators
     # MigrationGenerator generates a new migration using the migration.rb.tt template.
