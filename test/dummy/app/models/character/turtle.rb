@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Character
   class Turtle < Character
     include Weaponizable

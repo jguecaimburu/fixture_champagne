@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddInitialTables < ActiveRecord::Migration[7.0]
   def change
     create_table :levels do |t|
@@ -14,7 +16,7 @@ class AddInitialTables < ActiveRecord::Migration[7.0]
       t.string :type
       t.date :birthday
       t.text :history
-      
+
       t.timestamps
     end
 
@@ -22,7 +24,7 @@ class AddInitialTables < ActiveRecord::Migration[7.0]
       t.string :name
       t.references :level
       t.datetime :collection_time
-      
+
       t.timestamps
     end
 

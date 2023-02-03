@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This file is auto-generated from the current state of the database. Instead
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
@@ -10,7 +12,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_02_02_172207) do
+ActiveRecord::Schema[7.0].define(version: 20_230_202_172_207) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -18,7 +20,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_02_172207) do
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
-    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+    t.index %w[record_type record_id name blob_id], name: "index_active_storage_attachments_uniqueness",
+                                                    unique: true
   end
 
   create_table "active_storage_blobs", force: :cascade do |t|
@@ -36,7 +39,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_02_172207) do
   create_table "active_storage_variant_records", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.string "variation_digest", null: false
-    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+    t.index %w[blob_id variation_digest], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "character_mushrooms", force: :cascade do |t|
@@ -75,7 +78,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_02_172207) do
     t.float "precision"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["weaponizable_type", "weaponizable_id"], name: "index_weaponizable_weapons_on_weaponizable"
+    t.index %w[weaponizable_type weaponizable_id], name: "index_weaponizable_weapons_on_weaponizable"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

@@ -8,9 +8,10 @@ class FixtureChampagneTest < ActiveSupport::TestCase
   teardown { remove_temporary_fixture_folder }
 
   test "it creates a temporary fixture folder" do
-    assert !FixtureChampagne::Migrator.tmp_fixture_path.exist?
+    refute_predicate FixtureChampagne::Migrator.tmp_fixture_path, :exist?
     FixtureChampagne::MigrationContext.migrate
-    assert FixtureChampagne::Migrator.tmp_fixture_path.exist?
+
+    assert_predicate FixtureChampagne::Migrator.tmp_fixture_path, :exist?
   end
 
   def remove_temporary_fixture_folder
