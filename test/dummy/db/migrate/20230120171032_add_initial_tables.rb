@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class AddInitialTables < ActiveRecord::Migration[7.0]
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def change
     create_table :levels do |t|
       t.string :name
@@ -37,4 +38,5 @@ class AddInitialTables < ActiveRecord::Migration[7.0]
       t.timestamps
     end
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 end
