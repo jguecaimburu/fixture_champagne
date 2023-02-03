@@ -13,3 +13,8 @@ RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include("README.md")
   rdoc.rdoc_files.include("lib/**/*.rb")
 end
+
+$LOAD_PATH << File.expand_path("test", __dir__)
+require "rails/plugin/test"
+
+task default: :test

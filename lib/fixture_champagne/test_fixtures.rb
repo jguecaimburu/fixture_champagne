@@ -20,7 +20,9 @@ module FixtureChampagne
     end
 
     def before_migrate
-      ActiveRecord::TestDatabases.create_and_load_schema(0, env_name: "test")
+      # Database is already prepared
+      ActiveRecord::TestDatabases.create_and_load_schema(0, env_name: "test") unless Rails.env.test?
+
       setup_fixtures
     end
 

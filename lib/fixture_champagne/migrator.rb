@@ -7,7 +7,7 @@ module FixtureChampagne
   #
   # The migrator implements the TestFixtures module to have access to a test database with pre existing fixtures
   # already loaded and fixture accessors. It allows migrations access to all this.
-  # It contains the rules on how to avoid repeated fixtures, how to handle attached files, where to put temporal
+  # It contains the rules on how to avoid repeated fixtures, how to handle attached files, where to put temporary
   # fixtures before overwritting (if necessary) and how to structure the fixtures folder tree.
   class Migrator
     include TestFixtures
@@ -149,12 +149,12 @@ module FixtureChampagne
     end
 
     def create_new_fixture_files(klasses, fixtures_data)
-      setup_temporal_fixtures_dir
+      setup_temporary_fixtures_dir
       copy_fixture_attachments
       klasses.each do |klass|
         data = fixtures_data[klass.table_name]
-        filename = temporal_fixture_filename(klass)
-        create_temporal_fixture_file(data, filename)
+        filename = temporary_fixture_filename(klass)
+        create_temporary_fixture_file(data, filename)
       end
       return unless configuration.overwrite_fixtures?
 
@@ -162,7 +162,7 @@ module FixtureChampagne
       remember_new_fixture_versions
     end
 
-    def setup_temporal_fixtures_dir
+    def setup_temporary_fixtures_dir
       FileUtils.rm_r(self.class.tmp_fixture_path, secure: true) if self.class.tmp_fixture_path.exist?
       FileUtils.mkdir(self.class.tmp_fixture_path)
     end
@@ -173,13 +173,13 @@ module FixtureChampagne
       end
     end
 
-    def temporal_fixture_filename(klass)
+    def temporary_fixture_filename(klass)
       parts = klass.to_s.split("::").map(&:underscore)
       parts << parts.pop.pluralize.concat(".yml")
       self.class.tmp_fixture_path.join(*parts)
     end
 
-    def create_temporal_fixture_file(data, filename)
+    def create_temporary_fixture_file(data, filename)
       FileUtils.mkdir_p(filename.dirname)
       File.open(filename, "w") do |file|
         yaml = YAML.dump(data).gsub(/\n(?=[^\s])/, "\n\n").delete_prefix("---\n\n")
