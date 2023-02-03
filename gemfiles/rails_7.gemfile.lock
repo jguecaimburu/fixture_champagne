@@ -1,5 +1,5 @@
 PATH
-  remote: .
+  remote: ..
   specs:
     fixture_champagne (0.1.0)
       rails (>= 6.1.0)
@@ -85,7 +85,7 @@ GEM
       irb (>= 1.5.0)
       reline (>= 0.3.1)
     erubi (1.12.0)
-    globalid (1.0.1)
+    globalid (1.1.0)
       activesupport (>= 5.0)
     i18n (1.12.0)
       concurrent-ruby (~> 1.0)
@@ -96,7 +96,7 @@ GEM
     loofah (2.19.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
-    mail (2.8.0.1)
+    mail (2.8.1)
       mini_mime (>= 0.1.1)
       net-imap
       net-pop
@@ -115,7 +115,7 @@ GEM
     net-smtp (0.3.3)
       net-protocol
     nio4r (2.5.8)
-    nokogiri (1.14.0-x86_64-linux)
+    nokogiri (1.14.1-x86_64-linux)
       racc (~> 1.4)
     parallel (1.22.1)
     parser (3.2.0.0)
@@ -156,7 +156,7 @@ GEM
     reline (0.3.2)
       io-console (~> 0.5)
     rexml (3.2.5)
-    rubocop (1.44.0)
+    rubocop (1.44.1)
       json (~> 2.3)
       parallel (~> 1.10)
       parser (>= 3.2.0.0)
@@ -168,7 +168,7 @@ GEM
       unicode-display_width (>= 2.4.0, < 3.0)
     rubocop-ast (1.24.1)
       parser (>= 3.1.1.0)
-    rubocop-minitest (0.26.1)
+    rubocop-minitest (0.27.0)
       rubocop (>= 0.90, < 2.0)
     rubocop-rake (0.6.0)
       rubocop (~> 1.0)
@@ -176,7 +176,7 @@ GEM
     sqlite3 (1.6.0-x86_64-linux)
     thor (1.2.1)
     timeout (0.3.1)
-    tzinfo (2.0.5)
+    tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.4.2)
     websocket-driver (0.7.5)
@@ -191,6 +191,7 @@ DEPENDENCIES
   appraisal
   debug (>= 1.0.0)
   fixture_champagne!
+  rails (~> 7.0.0)
   rubocop (~> 1.44)
   rubocop-minitest (~> 0.26)
   rubocop-rake (~> 0.6)

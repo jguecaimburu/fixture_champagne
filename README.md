@@ -253,7 +253,10 @@ Feel free to open an issue if you have any doubt, suggestion or find buggy behav
 
 This project uses [Rubocop](https://github.com/rubocop/rubocop) to format Ruby code. Please make sure to run `rubocop` on your branch before submitting pull requests. You can do that by running `bundle exec rubocop -A`.
 
-Also run the test suite `bin/rake test`.
+Also run the tests for each supported Rails version with:
+```sh
+bundle exec appraisal rake test
+```
 
 
 ## License

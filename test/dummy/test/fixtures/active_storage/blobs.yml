@@ -1,1 +1,18 @@
+# Support Rails >= 6.0.0
+<% if ActiveStorage.const_defined?(:FixtureSet) %>
+
 mushy_pic: <%= ActiveStorage::FixtureSet.blob filename: "mushroom.png" %>
+
+<% else %>
+
+mushy_pic:
+  key: "shY2DLAA6wqfRjwAPqeuJwh9"
+  filename: "mushroom.png"
+  content_type: "image/png"
+  metadata:
+    identified: true
+  service_name: "test"
+  byte_size: 1261900
+  checksum: "sZRJXe4VJ+asijkkoYAP4A=="
+
+<% end %>
