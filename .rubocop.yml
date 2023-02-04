@@ -8,6 +8,7 @@ AllCops:
   Exclude:
     - test/dummy/db/schema.rb
     - gemfiles/*
+    - vendor/bundle/**/*
 
 Style/StringLiterals:
   Enabled: true
