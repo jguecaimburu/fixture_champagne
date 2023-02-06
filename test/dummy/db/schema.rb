@@ -11,8 +11,11 @@
 # migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
+#
+# The schema usually includes the version, for example ActiveRecord::Schema[7.0]
+# It was manually removed from this file to allow testing with different Rails versions
 
-ActiveRecord::Schema[7.0].define(version: 20_230_202_172_207) do
+ActiveRecord::Schema.define(version: 20_230_202_172_207) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
