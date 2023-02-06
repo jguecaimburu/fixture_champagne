@@ -16,7 +16,3 @@ if ActiveSupport::TestCase.respond_to?(:fixture_path=)
 end
 
 require "minitest/mock"
-
-def remove_temporary_fixture_folder
-  FileUtils.rm_rf(FixtureChampagne::Migrator.tmp_fixture_path)
-end

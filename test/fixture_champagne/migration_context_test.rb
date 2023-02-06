@@ -3,7 +3,21 @@
 require "test_helper"
 
 class MigrationContextTest < ActiveSupport::TestCase
-  teardown { remove_temporary_fixture_folder }
+  class RaisingMigrator
+    def initialize(**kwargs)
+      @attributes = kwargs
+    end
+
+    def migrate
+      if @attributes[:direction] == :up
+        raise "unexpected migrate with direction up"
+      elsif @attributes[:direction] == :down
+        raise "unexpected migrate with direction down"
+      else
+        raise "unexpected migrate with unidentified direction #{@attributes[:direction]}"
+      end
+    end
+  end
   
   test "fixture_migrations_path" do
     assert_equal(FixtureChampagne::MigrationContext.fixture_migrations_path, Rails.root.join("test", "fixture_migrations"))
@@ -151,22 +165,6 @@ class MigrationContextTest < ActiveSupport::TestCase
 
     FixtureChampagne::Migrator.stub(:new, ->(**kwargs) { RaisingMigrator.new(**kwargs) }) do
       context.rollback
-    end
-  end
-
-  class RaisingMigrator
-    def initialize(**kwargs)
-      @attributes = kwargs
-    end
-
-    def migrate
-      if @attributes[:direction] == :up
-        raise "unexpected migrate with direction up"
-      elsif @attributes[:direction] == :down
-        raise "unexpected migrate with direction down"
-      else
-        raise "unexpected migrate with unidentified direction #{@attributes[:direction]}"
-      end
     end
   end
 end
