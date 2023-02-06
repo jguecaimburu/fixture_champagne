@@ -14,3 +14,9 @@ if ActiveSupport::TestCase.respond_to?(:fixture_path=)
   ActiveSupport::TestCase.file_fixture_path = "#{ActiveSupport::TestCase.fixture_path}/files"
   ActiveSupport::TestCase.fixtures :all
 end
+
+require "minitest/mock"
+
+def remove_temporary_fixture_folder
+  FileUtils.rm_rf(FixtureChampagne::Migrator.tmp_fixture_path)
+end

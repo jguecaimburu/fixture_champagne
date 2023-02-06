@@ -6,6 +6,13 @@ greenie:
   name: Greenie
   type: Character::Turtle::Green
 
+greenie_jr:
+  birthday: 2023-12-10
+  history: I'm not the first green turtle
+  level: hard
+  name: Greenie Jr
+  type: Character::Turtle::Green
+
 purpy:
   birthday: 2018-12-09
   history: I have a long history

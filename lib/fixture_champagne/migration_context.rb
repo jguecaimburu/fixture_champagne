@@ -73,7 +73,11 @@ module FixtureChampagne
       end
 
       def configuration
-        @configuration ||= Configuration.new(configuration_path)
+        @configuration ||= if configuration_path.exist?
+                             Configuration.new(YAML.load_file(configuration_path))
+                           else
+                             Configuration.new({})
+                           end
       end
 
       def configuration_path
@@ -180,32 +184,28 @@ module FixtureChampagne
       File.basename(filename).scan(Migration::MIGRATION_FILENAME_REGEXP).first
     end
 
-    Configuration = Struct.new(:file_path) do
-      def initialize(file_path)
+    Configuration = Struct.new(:configuration_data) do
+      def initialize(configuration_data)
         super
-        @configuration = if file_path.exist?
-                           YAML.load_file(file_path)
-                         else
-                           {}
-                         end
+        @configuration_data = configuration_data.with_indifferent_access
       end
 
       def label_templates
-        @configuration["label"] || {}
+        @configuration_data["label"] || {}
       end
 
       def overwrite_fixtures?
-        return true unless @configuration.key?("overwrite")
+        return true unless @configuration_data.key?("overwrite")
 
-        @configuration["overwrite"]
+        @configuration_data["overwrite"]
       end
 
       def rename_fixtures?
-        @configuration["rename"]
+        @configuration_data["rename"]
       end
 
       def ignored_tables
-        @configuration["ignore"].to_a || []
+        @configuration_data["ignore"].to_a || []
       end
     end
   end
