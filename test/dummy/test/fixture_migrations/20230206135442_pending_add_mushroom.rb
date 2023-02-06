@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PendingAddMushroom < FixtureChampagne::Migration::Base
   def up
     return if Character::Mushroom.find_by(name: "Amarita").present?

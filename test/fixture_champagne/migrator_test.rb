@@ -27,7 +27,7 @@ class MigratorTest < ActiveSupport::TestCase
   #        fixture files without initializing records is not required in any other process
   def parse_temporary_fixture_folder
     Dir.glob("#{FixtureChampagne::Migrator.tmp_fixture_path}/**/*.yml").each_with_object({}) do |path, mapping|
-      key = path.scan(/.*\/fixtures\/(.*)\.yml/).first.first.gsub("/", "_")
+      key = path.scan(%r{.*/fixtures/(.*)\.yml}).first.first.gsub("/", "_")
       mapping[key] = {}
       ActiveRecord::FixtureSet::File.open(path).each { |row| mapping[key][row.first] = row.last }
     end
@@ -54,6 +54,7 @@ class MigratorTest < ActiveSupport::TestCase
 
   test "fixture_attachment_folders" do
     attachment_folders = FixtureChampagne::Migrator.fixture_attachment_folders
+
     assert_includes(attachment_folders, Rails.root.join("test", "fixtures", "files"))
     assert_includes(attachment_folders, Rails.root.join("test", "fixtures", "active_storage"))
     assert_includes(attachment_folders, Rails.root.join("test", "fixtures", "action_text"))
@@ -69,21 +70,22 @@ class MigratorTest < ActiveSupport::TestCase
     )
 
     migrator.migrate
-    
+
     new_fixtures_data = parse_temporary_fixture_folder
 
-    # MAKE assertions
+    # Make better assertions
+    refute_nil new_fixtures_data
   end
 
-  test "migrate without pending migrations" do
-  end
+  # test "migrate without pending migrations" do
+  # end
 
-  test "migrate with specific label templates" do
-  end
+  # test "migrate with specific label templates" do
+  # end
 
-  test "ignore tables in migration" do
-  end
+  # test "ignore tables in migration" do
+  # end
 
-  test "rename fixtures" do
-  end
+  # test "rename fixtures" do
+  # end
 end
