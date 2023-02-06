@@ -41,5 +41,7 @@ jobs:
           DATABASE_URL: "sqlite3:fixture_champagne_test"
           RAILS_ENV: test
         run: |
+          cd test/dummy/
           bundle exec rails db:test:prepare
-          bundle exec rails test
+          cd ../..
+          bundle exec rake test
