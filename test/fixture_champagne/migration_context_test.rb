@@ -144,9 +144,14 @@ class MigrationContextTest < ActiveSupport::TestCase
       fixtures_migration_version: 20_230_206_135_442
     )
 
-    FixtureChampagne::Migrator.stub(:new, ->(**kwargs) { RaisingMigrator.new(**kwargs) }) do
-      context.migrate
+    out, err = capture_io do
+      FixtureChampagne::Migrator.stub(:new, ->(**kwargs) { RaisingMigrator.new(**kwargs) }) do
+        context.migrate
+      end
     end
+    
+    assert_equal(out, "No fixture migrations pending.\n")
+    assert_equal(err, "")
   end
 
   test "rollback calls migrator if any executed migration" do
@@ -172,8 +177,13 @@ class MigrationContextTest < ActiveSupport::TestCase
       fixtures_migration_version: 0
     )
 
-    FixtureChampagne::Migrator.stub(:new, ->(**kwargs) { RaisingMigrator.new(**kwargs) }) do
-      context.rollback
+    out, err = capture_io do
+      FixtureChampagne::Migrator.stub(:new, ->(**kwargs) { RaisingMigrator.new(**kwargs) }) do
+        context.rollback
+      end  
     end
+    
+    assert_equal(out, "No migration to rollback.\n")
+    assert_equal(err, "")
   end
 end

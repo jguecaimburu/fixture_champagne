@@ -109,7 +109,7 @@ module FixtureChampagne
       if pending_migrations.any? || fixtures_schema_version != schema_current_version || configuration.rename_fixtures?
         up
       else
-        p "No fixture migrations pending."
+        puts "No fixture migrations pending."
       end
     end
 
@@ -117,7 +117,7 @@ module FixtureChampagne
       if executed_migrations.any?
         down
       else
-        p "No migration to rollback."
+        puts "No migration to rollback."
       end
     end
 
