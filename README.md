@@ -2,8 +2,6 @@
 
 ### Fixture migrations for your Ruby on Rails applications
 
-WIP: This gem is still unreleased.
-
 
 Fixture Champagne is designed to help you keep your fixtures tidy, applying the data migration pattern to create, update or destroy fixtures.
 
@@ -12,7 +10,7 @@ It supports label references for `belongs_to` associations, both regular and pol
 
 ## Installation
 
-1. Add `fixture-champagne` to the development group of your app's `Gemfile`:
+1. Add `fixture-champagne` to the development group of your Rails app's `Gemfile`:
 
 ```ruby
 group :development do
@@ -242,9 +240,9 @@ Versions saved in `.fixture_champagne_versions.yml` are there to ensure that you
 
 Raise errors to stop the migration if there are invalid objects. A good way to do that is using `ActiveRecord` bang methods `create!`, `update!` and `destroy!`.
 
-#### Run migrations in independent commits
+#### Review changes before git commits
 
-The safest way to rollback a migration is to revert any changes made to your `fixtures` folder and versions file. That can be easily done if you commit all your changes before running a migration. After migrating, inspect the changes made to the fixture folder and run the whole test suite. If anything goes wrong, you can revert the changes using `git`.
+The safest way to rollback a migration is to revert any changes made to your `fixtures` folder and versions file using git. After migrating, inspect the changes made to the fixture folder and run the whole test suite.
 
 
 ## Contributing
