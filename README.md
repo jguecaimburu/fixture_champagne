@@ -2,6 +2,8 @@
 
 ### Fixture migrations for your Ruby on Rails applications
 
+[![Build Status](https://github.com/jguecaimburu/fixture_champagne/workflows/Tests/badge.svg)](https://github.com/jguecaimburu/fixture_champagne/actions) [![Gem Version](https://badge.fury.io/rb/fixture_champagne.svg)](https://badge.fury.io/rb/fixture_champagne)
+
 
 Fixture Champagne is designed to help you keep your fixtures tidy, applying the data migration pattern to create, update or destroy fixtures.
 
