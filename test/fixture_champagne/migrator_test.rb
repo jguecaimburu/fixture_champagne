@@ -75,63 +75,73 @@ class MigratorTest < ActiveSupport::TestCase
 
     # Right files and fixture set sizes
 
-    assert_equal(new_fixtures_data["levels"].size, 3)
-    assert_equal(new_fixtures_data["character/turtles"].size, 3)
-    assert_equal(new_fixtures_data["character/mushrooms"].size, 1)
-    assert_equal(new_fixtures_data["weaponizable/weapons"].size, 2)
-    assert_equal(new_fixtures_data["active_storage/blobs"].size, 1)
-    assert_equal(new_fixtures_data["active_storage/attachments"].size, 1)
+    assert_equal(3, new_fixtures_data["levels"].size)
+    assert_equal(3, new_fixtures_data["character/turtles"].size)
+    assert_equal(1, new_fixtures_data["character/mushrooms"].size)
+    assert_equal(2, new_fixtures_data["weaponizable/weapons"].size)
+    assert_equal(1, new_fixtures_data["active_storage/blobs"].size)
+    assert_equal(1, new_fixtures_data["active_storage/attachments"].size)
 
     # New fixtures have default labels
 
     new_levels = new_fixtures_data["levels"].filter { |k, _v| /levels_[1-9]+/.match?(k) }
-    assert_equal(new_levels.size, 1)
+
+    assert_equal(1, new_levels.size)
 
     new_level = new_levels.first.last
 
     # Old fixture labels are the same
 
     other_levels = new_fixtures_data["levels"].reject { |k, _v| new_levels.map(&:first).include?(k) }
-    assert_equal(other_levels.map(&:first).sort, ["easy", "hard"])
+
+    assert_equal(%w[easy hard], other_levels.map(&:first).sort)
 
     # Attachment files were not changed
 
     old_files = Dir.glob(Rails.root.join("test", "fixtures", "files")).map { |p| File.basename(p) }.sort
     new_files = Dir.glob(Rails.root.join("tmp", "fixtures", "files")).map { |p| File.basename(p) }.sort
+
     assert_equal(old_files, new_files)
 
     blob = new_fixtures_data["active_storage/blobs"]["mushy_pic"]
-    assert_equal(blob["byte_size"], 1261900)
-    assert_equal(blob["filename"], "mushroom.png")
+
+    assert_equal(1_261_900, blob["byte_size"])
+    assert_equal("mushroom.png", blob["filename"])
 
     attachment = new_fixtures_data["active_storage/attachments"]["mushy_pic"]
-    assert_equal(attachment["blob"], "mushy_pic")
-    assert_equal(attachment["record"], "mushy (Character::Mushroom)")
+
+    assert_equal("mushy_pic", attachment["blob"])
+    assert_equal("mushy (Character::Mushroom)", attachment["record"])
 
     # Polymorphic belongs_to and types are serialized properly
 
     new_weapons = new_fixtures_data["weaponizable/weapons"].select { |k, _v| /weaponizable_weapons_[1-9]+/.match?(k) }
-    assert_equal(new_weapons.size, 1)
+
+    assert_equal(1, new_weapons.size)
 
     new_weapon = new_weapons.first.last
-    assert_equal(new_weapon["type"], "Weaponizable::Weapon::Rocket")
-    assert_equal(new_weapon["weaponizable"], "greenie (Character::Turtle)")
+
+    assert_equal("Weaponizable::Weapon::Rocket", new_weapon["type"])
+    assert_equal("greenie (Character::Turtle)", new_weapon["weaponizable"])
 
     # Regular belongs_to are serialized properly
 
     greenie_turtle = new_fixtures_data["character/turtles"]["greenie"]
-    assert_equal(greenie_turtle["level"], "easy")
+
+    assert_equal("easy", greenie_turtle["level"])
 
     # Other types
 
-    greenie_history = "I don't have a long history but sometimes I like to speak for a while just to make people comfortable"
+    greenie_history = "I don't have a long history but sometimes I like \
+to speak for a while just to make people comfortable"
+
     assert_equal(greenie_turtle["history"], greenie_history)
     assert_equal(greenie_turtle["birthday"], Date.new(2019, 12, 10))
-    assert_equal(new_level["difficulty"], "hard")
-    assert_equal(new_level["unlocked"], true)
-    assert_equal(new_weapon["precision"], 0.15)
-    assert_equal(new_weapon["power"], 120)
-    assert_equal(new_fixtures_data["character/mushrooms"]["mushy"]["collection_time"], "2018-12-09 22:30:00")
+    assert_equal("hard", new_level["difficulty"])
+    assert(new_level["unlocked"])
+    assert_in_delta(new_weapon["precision"], 0.15)
+    assert_equal(120, new_weapon["power"])
+    assert_equal("2018-12-09 22:30:00", new_fixtures_data["character/mushrooms"]["mushy"]["collection_time"])
   end
 
   test "migrate without pending migrations" do
@@ -147,12 +157,12 @@ class MigratorTest < ActiveSupport::TestCase
 
     new_fixtures_data = parse_temporary_fixture_folder
 
-    assert_equal(new_fixtures_data["levels"].size, 2)
-    assert_equal(new_fixtures_data["character/turtles"].size, 3)
-    assert_equal(new_fixtures_data["character/mushrooms"].size, 1)
-    assert_equal(new_fixtures_data["weaponizable/weapons"].size, 1)
-    assert_equal(new_fixtures_data["active_storage/blobs"].size, 1)
-    assert_equal(new_fixtures_data["active_storage/attachments"].size, 1)
+    assert_equal(2, new_fixtures_data["levels"].size)
+    assert_equal(3, new_fixtures_data["character/turtles"].size)
+    assert_equal(1, new_fixtures_data["character/mushrooms"].size)
+    assert_equal(1, new_fixtures_data["weaponizable/weapons"].size)
+    assert_equal(1, new_fixtures_data["active_storage/blobs"].size)
+    assert_equal(1, new_fixtures_data["active_storage/attachments"].size)
   end
 
   test "migrate with specific label templates and rename false" do
@@ -175,16 +185,16 @@ class MigratorTest < ActiveSupport::TestCase
 
     # Right files and fixture set sizes
 
-    assert_equal(new_fixtures_data["levels"].size, 3)
-    assert_equal(new_fixtures_data["character/turtles"].size, 3)
-    assert_equal(new_fixtures_data["character/mushrooms"].size, 1)
-    assert_equal(new_fixtures_data["weaponizable/weapons"].size, 2)
-    assert_equal(new_fixtures_data["active_storage/blobs"].size, 1)
-    assert_equal(new_fixtures_data["active_storage/attachments"].size, 1)
+    assert_equal(3, new_fixtures_data["levels"].size)
+    assert_equal(3, new_fixtures_data["character/turtles"].size)
+    assert_equal(1, new_fixtures_data["character/mushrooms"].size)
+    assert_equal(2, new_fixtures_data["weaponizable/weapons"].size)
+    assert_equal(1, new_fixtures_data["active_storage/blobs"].size)
+    assert_equal(1, new_fixtures_data["active_storage/attachments"].size)
 
     # Old fixtures kept labels, new fixtures use template
 
-    assert_equal(new_fixtures_data["levels"].keys.sort, ["easy", "hard", "new_hard"])
+    assert_equal(%w[easy hard new_hard], new_fixtures_data["levels"].keys.sort)
   end
 
   test "migrate with specific label templates and rename true" do
@@ -207,16 +217,16 @@ class MigratorTest < ActiveSupport::TestCase
 
     # Right files and fixture set sizes
 
-    assert_equal(new_fixtures_data["levels"].size, 3)
-    assert_equal(new_fixtures_data["character/turtles"].size, 3)
-    assert_equal(new_fixtures_data["character/mushrooms"].size, 1)
-    assert_equal(new_fixtures_data["weaponizable/weapons"].size, 2)
-    assert_equal(new_fixtures_data["active_storage/blobs"].size, 1)
-    assert_equal(new_fixtures_data["active_storage/attachments"].size, 1)
+    assert_equal(3, new_fixtures_data["levels"].size)
+    assert_equal(3, new_fixtures_data["character/turtles"].size)
+    assert_equal(1, new_fixtures_data["character/mushrooms"].size)
+    assert_equal(2, new_fixtures_data["weaponizable/weapons"].size)
+    assert_equal(1, new_fixtures_data["active_storage/blobs"].size)
+    assert_equal(1, new_fixtures_data["active_storage/attachments"].size)
 
     # Old fixtures kept labels, new fixtures use template
 
-    assert_equal(new_fixtures_data["levels"].keys.sort, ["final_hard", "initial_easy", "unlocked_hard"])
+    assert_equal(%w[final_hard initial_easy unlocked_hard], new_fixtures_data["levels"].keys.sort)
   end
 
   test "migrate with ignored tables" do
@@ -238,12 +248,12 @@ class MigratorTest < ActiveSupport::TestCase
 
     # Right files and fixture set sizes
 
-    assert_equal(new_fixtures_data["levels"].size, 2)
-    assert_equal(new_fixtures_data["character/turtles"].size, 3)
-    assert_equal(new_fixtures_data["character/mushrooms"].size, 1)
-    assert_equal(new_fixtures_data["active_storage/blobs"].size, 1)
-    assert_equal(new_fixtures_data["active_storage/attachments"].size, 1)
-    
+    assert_equal(2, new_fixtures_data["levels"].size)
+    assert_equal(3, new_fixtures_data["character/turtles"].size)
+    assert_equal(1, new_fixtures_data["character/mushrooms"].size)
+    assert_equal(1, new_fixtures_data["active_storage/blobs"].size)
+    assert_equal(1, new_fixtures_data["active_storage/attachments"].size)
+
     assert_nil(new_fixtures_data["weaponizable/weapons"])
   end
 end

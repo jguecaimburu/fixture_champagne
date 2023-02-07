@@ -149,9 +149,9 @@ class MigrationContextTest < ActiveSupport::TestCase
         context.migrate
       end
     end
-    
-    assert_equal(out, "No fixture migrations pending.\n")
-    assert_equal(err, "")
+
+    assert_equal("No fixture migrations pending.\n", out)
+    assert_equal("", err)
   end
 
   test "rollback calls migrator if any executed migration" do
@@ -180,10 +180,10 @@ class MigrationContextTest < ActiveSupport::TestCase
     out, err = capture_io do
       FixtureChampagne::Migrator.stub(:new, ->(**kwargs) { RaisingMigrator.new(**kwargs) }) do
         context.rollback
-      end  
+      end
     end
-    
-    assert_equal(out, "No migration to rollback.\n")
-    assert_equal(err, "")
+
+    assert_equal("No migration to rollback.\n", out)
+    assert_equal("", err)
   end
 end

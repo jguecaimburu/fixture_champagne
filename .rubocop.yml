@@ -23,3 +23,14 @@ Layout/LineLength:
 
 Metrics/ClassLength:
   Enabled: false
+
+Style/FormatStringToken:
+  Exclude:
+    - test/**/*_test.rb
+
+Metrics/BlockLength:
+  Exclude:
+    - test/**/*_test.rb
+
+Minitest/MultipleAssertions:
+  Enabled: false
