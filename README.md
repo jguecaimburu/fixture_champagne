@@ -116,8 +116,9 @@ enemies_12345678:
 
 If the migration is successful, the migrator will take the max version all available migrations and the current schema version and save both numbers in `test/.fixture_champagne_versions.yml` (or `spec/` if using Rspec) to identify future pending migrations.
 
-The default label for a new fixture is a unique identifier composed of the table name and the record id. However, this label can be configured (keep reading to know how).
+The default label for a new fixture is a unique identifier composed of the table name and the record id. However, this label can be [configured](#fixture-labels).
 
+You can also customize your fixture migrations by overriding the default template. Just place yours in `lib/templates/fixture_champagne/migration/migration.rb.tt`. This can be useful for example if you use [FactoryBot](#extending-your-migrations).
 
 ### Rollback
 
@@ -207,6 +208,45 @@ On namespaced models, the migrator will create a folder for each level and a `.y
 If you use single table inheritance, then the file will correspond with the parent model, the owner of the table. For example, `class Weapon::Rocket < Weapon; end` will be saved in `fixtures/weapons.yml`.
 
 All fixtures files that correspond to attachments will be copied as they are. Those are the ones located in `fixtures/files`, `fixtures/active_storage` and `fixtures/action_text`.
+
+
+### Extending your migrations
+
+You can customize your fixture migrations by overriding the default template. Just place yours in `lib/templates/fixture_champagne/migration/migration.rb.tt`. Let's say you use [FactoryBot](https://github.com/thoughtbot/factory_bot_rails). It could be really helpful to use your existing factories to create new fixtures.
+
+You could replace the default template with:
+```ruby
+require "factory_bot_rails"
+
+class <%= class_name %> < FixtureChampagne::Migration::Base
+  include FactoryBot::Syntax::Methods
+
+  def up
+    # Create, update or destroy records here
+  end
+
+  def down
+    # Optionally, reverse changes made by the :up method
+  end
+end
+```
+
+And all your migrations will now have access to your existing factories. If you have an enemy factory, the new migration could look like:
+```ruby
+# 20230126153650_create_initial_enemy.rb
+
+class CreateInitialEnemy < FixtureChampagne::Migration::Base
+  def up
+    unless Enemy.find_by(name: "Initial Enemy").present?
+      create(:enemy, name: "Initial Enemy", level: levels(:first_level)) 
+    end
+  end
+
+  def down
+    Enemy.find_by(name: "Initial Enemy").destroy!
+  end
+end
+```
 
 
 ## Features currently not supported
