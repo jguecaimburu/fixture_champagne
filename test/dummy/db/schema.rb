@@ -47,6 +47,7 @@ ActiveRecord::Schema.define(version: 20_230_202_172_207) do
 
   create_table "character_mushrooms", force: :cascade do |t|
     t.string "name"
+    t.string "code_name"
     t.integer "level_id"
     t.datetime "collection_time"
     t.datetime "created_at", null: false

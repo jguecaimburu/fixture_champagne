@@ -32,4 +32,6 @@ module FixtureChampagne # :nodoc:
       end
     end
   end
+
+  class NotInTestEnvironmentError < StandardError; end # :nodoc:
 end
