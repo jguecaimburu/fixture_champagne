@@ -25,8 +25,8 @@ class MigrationContextTest < ActiveSupport::TestCase
                  Rails.root.join("test", "fixture_migrations"))
   end
 
-  test "fixture_path" do
-    assert_equal(FixtureChampagne::MigrationContext.fixtures_path, Rails.root.join("test", "fixtures"))
+  test "fixture_paths" do
+    assert_equal(FixtureChampagne::MigrationContext.fixture_paths, [Rails.root.join("test", "fixtures")])
   end
 
   test "configuration_path" do

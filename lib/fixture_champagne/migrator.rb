@@ -24,7 +24,7 @@ module FixtureChampagne
       end
 
       def fixture_attachment_folders
-        %w[files active_storage action_text].map { |f| fixture_path.join(f) }
+        %w[files active_storage action_text].map { |f| single_fixture_path.join(f) }
       end
     end
 
@@ -188,9 +188,9 @@ module FixtureChampagne
     end
 
     def overwrite_fixtures
-      removable_fixture_path = self.class.fixture_path.dirname.join("old_fixtures")
-      FileUtils.mv(self.class.fixture_path, removable_fixture_path)
-      FileUtils.mv(self.class.tmp_fixture_path, self.class.fixture_path)
+      removable_fixture_path = self.class.single_fixture_path.dirname.join("old_fixtures")
+      FileUtils.mv(self.class.single_fixture_path, removable_fixture_path)
+      FileUtils.mv(self.class.tmp_fixture_path, self.class.single_fixture_path)
       FileUtils.rm_r(removable_fixture_path, secure: true)
     end
 

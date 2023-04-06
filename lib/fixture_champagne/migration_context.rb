@@ -46,13 +46,13 @@ module FixtureChampagne
       end
 
       def test_suite_folder_path
-        rspec_path = Rails.root.join("test")
-        minitest_path = Rails.root.join("spec")
+        rspec_path = Rails.root.join("spec")
+        minitest_path = Rails.root.join("test")
 
-        if minitest_path.exist?
-          minitest_path
-        elsif rspec_path.exist?
+        if defined?(Rspec) && rspec_path.exist?
           rspec_path
+        elsif minitest_path.exist?
+          minitest_path
         else
           raise "No test nor spec folder found"
         end
@@ -86,8 +86,25 @@ module FixtureChampagne
         test_suite_folder_path.join("fixture_champagne.yml")
       end
 
-      def fixtures_path
-        test_suite_folder_path.join("fixtures")
+      def fixture_paths
+        paths = if defined?(Rspec)
+                  rspec_fixture_paths
+                else
+                  minitest_fixture_paths
+                end
+        paths.map { |p| Pathname.new(p) }
+      end
+
+      def rspec_fixture_paths
+        Rspec.configuration.fixture_paths.any? ? Rspec.configuration.fixture_paths : [Rspec.configuration.fixture_path]
+      end
+
+      def minitest_fixture_paths
+        if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
+          ActiveSupport::TestCase.fixture_paths
+        else
+          [ActiveSupport::TestCase.fixture_path]
+        end
       end
     end
 
