@@ -130,6 +130,12 @@ class MigratorTest < ActiveSupport::TestCase
 
     assert_equal("easy", greenie_turtle["level"])
 
+    # Encrypted attributes
+
+    mushy = new_fixtures_data["character/mushrooms"]["mushy"]
+
+    assert_equal("hongo_trendy", mushy["code_name"])
+
     # Other types
 
     greenie_history = "I don't have a long history but sometimes I like \
@@ -141,7 +147,7 @@ to speak for a while just to make people comfortable"
     assert(new_level["unlocked"])
     assert_in_delta(new_weapon["precision"], 0.15)
     assert_equal(120, new_weapon["power"])
-    assert_equal("2018-12-09 22:30:00", new_fixtures_data["character/mushrooms"]["mushy"]["collection_time"])
+    assert_equal("2018-12-09 22:30:00", mushy["collection_time"])
   end
 
   test "migrate without pending migrations" do
