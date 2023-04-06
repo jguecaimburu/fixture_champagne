@@ -10,6 +10,9 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # Turn on encryption for tests
+  config.active_record.encryption.encrypt_fixtures = true if config.active_record.encryption
+
   # Turn false under Spring and add config.action_view.cache_template_loading = true.
   config.cache_classes = true
 

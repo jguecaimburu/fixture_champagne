@@ -16,6 +16,8 @@ module FixtureChampagne
   class MigrationContext
     class << self
       def migrate
+        raise NotInTestEnvironmentError unless Rails.env.test?
+
         build_context.migrate
       end
 

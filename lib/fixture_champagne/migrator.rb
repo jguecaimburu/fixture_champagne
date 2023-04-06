@@ -86,7 +86,7 @@ module FixtureChampagne
     end
 
     def build_fixture_data(klasses)
-      data = serialize_database_records(klasses)
+      data = serialize_database_model_instances(klasses)
 
       data.each_with_object({}) do |(table, table_data), sorted_data|
         next if table_data.empty?
@@ -95,7 +95,7 @@ module FixtureChampagne
       end
     end
 
-    def serialize_database_records(klasses)
+    def serialize_database_model_instances(klasses)
       klasses.each_with_object({}) do |klass, hash|
         table_name = klass.table_name.to_s
         if hash.key?(table_name)
@@ -103,21 +103,21 @@ module FixtureChampagne
                 "repeated table key for new fixtures, table #{table_name}, class: #{klass}"
         end
 
-        hash[table_name] = serialize_table_records(klass)
+        hash[table_name] = serialize_table_model_instances(klass)
       end
     end
 
-    def serialize_table_records(klass)
+    def serialize_table_model_instances(klass)
       table_data = {}
 
-      klass.all.each do |record|
-        label = fixture_label(record)
+      klass.all.each do |model_instance|
+        label = fixture_label(model_instance)
         if table_data.key?(label)
           raise RepeatedFixtureError,
                 "repeated fixture in serialization for label #{label}, class #{klass}"
         end
 
-        table_data[label] = fixture_serialized_attributes(record)
+        table_data[label] = fixture_serialized_attributes(model_instance)
       end
 
       table_data
@@ -128,8 +128,8 @@ module FixtureChampagne
       self.class.fixture_unique_id(table_name: fixture_set.table_name, id: fixture.find.id)
     end
 
-    def fixture_label(record)
-      labeler.label_for(record: record)
+    def fixture_label(model_instance)
+      labeler.label_for(model_instance: model_instance)
     end
 
     def labeler
@@ -140,8 +140,8 @@ module FixtureChampagne
       )
     end
 
-    def fixture_serialized_attributes(record)
-      serializer.serialized_attributes_for(record: record)
+    def fixture_serialized_attributes(model_instance)
+      serializer.serialized_attributes_for(model_instance: model_instance)
     end
 
     def serializer
@@ -211,45 +211,45 @@ module FixtureChampagne
         @rename = rename
       end
 
-      def label_for(record:)
+      def label_for(model_instance:)
         if @rename
-          build_label_for(record)
+          build_label_for(model_instance)
         else
-          find_label_for(record) || build_label_for(record)
+          find_label_for(model_instance) || build_label_for(model_instance)
         end
       end
 
       private
 
-      def find_label_for(record)
-        @pre_existing_fixtures_labels[record_unique_id(record)]
+      def find_label_for(model_instance)
+        @pre_existing_fixtures_labels[model_instance_unique_id(model_instance)]
       end
 
-      def build_label_for(record)
-        template = @templates[record.class.table_name]
+      def build_label_for(model_instance)
+        template = @templates[model_instance.class.table_name]
 
         if template.nil? || template == "DEFAULT"
-          default_label(record)
+          default_label(model_instance)
         else
-          interpolate_template(template, record)
+          interpolate_template(template, model_instance)
         end
       end
 
-      def default_label(record)
-        record_unique_id(record)
+      def default_label(model_instance)
+        model_instance_unique_id(model_instance)
       end
 
-      def record_unique_id(record)
-        Migrator.fixture_unique_id(table_name: record.class.table_name, id: record.id)
+      def model_instance_unique_id(model_instance)
+        Migrator.fixture_unique_id(table_name: model_instance.class.table_name, id: model_instance.id)
       end
 
-      def interpolate_template(template, record)
+      def interpolate_template(template, model_instance)
         template.gsub(INTERPOLATION_PATTERN) do
           attribute = ::Regexp.last_match(1).to_sym
-          value = if record.respond_to?(attribute)
-                    record.send(attribute)
+          value = if model_instance.respond_to?(attribute)
+                    model_instance.send(attribute)
                   else
-                    raise WrongFixtureLabelInterpolationError, attribute: attribute, klass: record.class
+                    raise WrongFixtureLabelInterpolationError, attribute: attribute, klass: model_instance.class
                   end
           value
         end.parameterize(separator: "_")
@@ -264,62 +264,73 @@ module FixtureChampagne
         @labeler = labeler
       end
 
-      def serialized_attributes_for(record:)
-        column_attributes = record.attributes.select { |a| record.class.column_names.include?(a) }
+      def serialized_attributes_for(model_instance:)
+        column_attributes = model_instance.attributes.select { |a| model_instance.class.column_names.include?(a) }
 
         # Favour fixtures autofilled timestamps and autogenerated ids
         filtered_attributes = %w[id created_at updated_at]
 
         serialized_attributes = column_attributes.map do |attribute, value|
-          serialize_attribute(record, attribute, value, filtered_attributes)
+          serialize_attribute(model_instance, attribute, value, filtered_attributes)
         end
 
         serialized_attributes.sort_by(&:first).to_h.except(*filtered_attributes)
       end
 
-      def serialize_attribute(record, attribute, value, filtered_attributes)
-        belongs_to_association = record.class.reflect_on_all_associations.filter(&:belongs_to?).find do |a|
+      def serialize_attribute(model_instance, attribute, value, filtered_attributes)
+        belongs_to_association = model_instance.class.reflect_on_all_associations.filter(&:belongs_to?).find do |a|
           a.foreign_key.to_s == attribute
         end
-        type = record.class.type_for_attribute(attribute)
+        type = model_instance.class.type_for_attribute(attribute)
 
         if belongs_to_association.present?
           filter_belongs_to_columns(belongs_to_association, filtered_attributes)
-          serialize_belongs_to(record, belongs_to_association)
+          serialize_belongs_to(model_instance, belongs_to_association)
         else
-          serialize_type(record, attribute, value, type)
+          serialize_type(model_instance, attribute, value, type)
         end
       end
 
-      def serialize_belongs_to(record, belongs_to_association)
-        associated_record = record.send(belongs_to_association.name)
+      def serialize_belongs_to(model_instance, belongs_to_association)
+        associated_model_instance = model_instance.send(belongs_to_association.name)
 
         reference_label = if belongs_to_association.polymorphic?
-                            foreign_type = record.send(belongs_to_association.foreign_type)
-                            "#{labeler.label_for(record: associated_record)} (#{foreign_type})"
+                            foreign_type = model_instance.send(belongs_to_association.foreign_type)
+                            "#{labeler.label_for(model_instance: associated_model_instance)} (#{foreign_type})"
                           else
-                            labeler.label_for(record: associated_record)
+                            labeler.label_for(model_instance: associated_model_instance)
                           end
 
         [belongs_to_association.name.to_s, reference_label]
       end
 
-      def serialize_type(record, attribute, value, type)
-        if type.type == :datetime
+      # rubocop:disable Metrics/MethodLength
+      def serialize_type(model_instance, attribute, value, type)
+        if type.respond_to?(:scheme) && encrypted_fixtures?
+          [attribute, type.cast_type.serialize(value)]
+        elsif type.type == :datetime
           # ActiveRecord::Type::DateTime#serialize returns a TimeWithZone object that makes the YAML dump less clear
-          [attribute, record.read_attribute_before_type_cast(attribute)]
+          [attribute, model_instance.read_attribute_before_type_cast(attribute)]
+          # PostgreSQL jsonb attributes can be saved as hashes or arrays in fixture yaml files
+        elsif type.type == :jsonb
+          [attribute, value]
         elsif type.respond_to?(:serialize)
           [attribute, type.serialize(value)]
         else
           [attribute, value.to_s]
         end
       end
+      # rubocop:enable Metrics/MethodLength
 
       def filter_belongs_to_columns(belongs_to_association, filtered_attributes)
         filtered_attributes << belongs_to_association.foreign_key.to_s
         return unless belongs_to_association.polymorphic?
 
         filtered_attributes << belongs_to_association.foreign_type.to_s
+      end
+
+      def encrypted_fixtures?
+        Rails.configuration.active_record.encryption.encrypt_fixtures
       end
     end
   end
