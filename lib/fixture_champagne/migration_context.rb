@@ -49,13 +49,17 @@ module FixtureChampagne
         rspec_path = Rails.root.join("spec")
         minitest_path = Rails.root.join("test")
 
-        if defined?(Rspec) && rspec_path.exist?
+        if test_framework == :rspec && rspec_path.exist?
           rspec_path
         elsif minitest_path.exist?
           minitest_path
         else
           raise "No test nor spec folder found"
         end
+      end
+
+      def test_framework
+        ::Rails.application.config.generators.options[:rails][:test_framework]
       end
 
       def schema_current_version
@@ -87,7 +91,7 @@ module FixtureChampagne
       end
 
       def fixture_paths
-        paths = if defined?(Rspec)
+        paths = if test_framework == :rspec
                   rspec_fixture_paths
                 else
                   minitest_fixture_paths
@@ -96,14 +100,18 @@ module FixtureChampagne
       end
 
       def rspec_fixture_paths
-        Rspec.configuration.fixture_paths.any? ? Rspec.configuration.fixture_paths : [Rspec.configuration.fixture_path]
+        if Rspec.configuration.fixture_paths.any?
+          Rspec.configuration.fixture_paths
+        else
+          Array(Rspec.configuration.fixture_path)
+        end
       end
 
       def minitest_fixture_paths
         if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
           ActiveSupport::TestCase.fixture_paths
         else
-          [ActiveSupport::TestCase.fixture_path]
+          Array(ActiveSupport::TestCase.fixture_path)
         end
       end
     end
