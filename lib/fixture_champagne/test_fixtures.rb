@@ -12,22 +12,11 @@ module FixtureChampagne
 
     included do
       if respond_to?(:fixture_paths)
-        fixture_paths << MigrationContext.fixture_paths
+        self.fixture_paths = MigrationContext.fixture_paths
       else
         self.fixture_path = MigrationContext.fixture_paths.first
       end
       fixtures :all
-    end
-
-    class_methods do
-      # FIXME: Should implement a strategy to regenerate different fixture folders
-      def single_fixture_path
-        if respond_to?(:fixture_paths)
-          fixture_paths.first
-        else
-          fixture_path
-        end
-      end
     end
 
     def name

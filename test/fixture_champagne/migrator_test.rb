@@ -53,7 +53,15 @@ class MigratorTest < ActiveSupport::TestCase
   end
 
   test "fixture_attachment_folders" do
-    attachment_folders = FixtureChampagne::Migrator.fixture_attachment_folders
+    migrator = FixtureChampagne::Migrator.new(
+      direction: :up,
+      migrations: @available_migrations,
+      target_migration_version: @available_migrations.map(&:version).max,
+      target_schema_version: FixtureChampagne::MigrationContext.schema_current_version,
+      configuration: FixtureChampagne::MigrationContext::Configuration.new(overwrite: false)
+    )
+
+    attachment_folders = migrator.fixture_attachment_folders
 
     assert_includes(attachment_folders, Rails.root.join("test", "fixtures", "files"))
     assert_includes(attachment_folders, Rails.root.join("test", "fixtures", "active_storage"))
