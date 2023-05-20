@@ -34,4 +34,6 @@ module FixtureChampagne # :nodoc:
   end
 
   class NotInTestEnvironmentError < StandardError; end # :nodoc:
+
+  class OverwriteNotAllowedError < StandardError; end # :nodoc:
 end

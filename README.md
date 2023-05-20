@@ -94,7 +94,7 @@ Add the `up` and `down` logic to the new migration:
 class CreateInitialEnemy < FixtureChampagne::Migration::Base
   def up
     unless Enemy.find_by(name: "Initial Enemy").present?
-      Enemy.create!(name: "Initial Enemy", level: levels(:first_level)) 
+      Enemy.create!(name: "Initial Enemy", level: levels(:first_level))
     end
   end
 
@@ -139,6 +139,9 @@ You can better control fixture migrations by creating a config YAML file: `test/
 
 Setting the `overwrite` key to `false` will leave your current fixtures untouched. The generated fixtures will go to `tmp/fixtures`. Default value is set to `true`.
 
+This feature has partial support for multiple fixture paths (Rails > 7.1). If your fixtures are divided across multiple paths (for example `test/fixtures_a` and `test/fixtues_b`), the fixture migration will fail unless you set `overwrite` to `false`. However, if you set multiple folders but only use one (all your files are in `test/fixtures_a`) then the migration can overwrite that folder.
+
+
 ```yaml
 # test/fixture_champagne.yml
 
@@ -155,7 +158,7 @@ In the previous example, you can configure:
 # test/fixture_champagne.yml
 
 label:
-  enemy: "%{name}"    
+  enemy: "%{name}"
 ```
 
 To generate:
@@ -184,7 +187,7 @@ If `rename` is set to `true`, every time you run `migrate` or `rollback` all fix
 
 Setting the `ignore` key will allow you to control which tables get saved as fixtures. It accepts an array, where items are table names. Any table ignored by this configuration will disappear from the corresponding fixture folder (depending on `overwrite`).
 
-Let's say for example that each time a new `Enemy` gets created, it creates an associated `Event` in a callback that runs some processing in the background. If that event belongs to a polymorphic `eventable`, for every single one of those, a new event will be added to your fixtures, making the `events.yml` a big but not very useful file. Or maybe events get incinerated a couple of days after execution and it makes no sense to have fixtures for them. In any of those situations, you could ignore them from fixtures like this:  
+Let's say for example that each time a new `Enemy` gets created, it creates an associated `Event` in a callback that runs some processing in the background. If that event belongs to a polymorphic `eventable`, for every single one of those, a new event will be added to your fixtures, making the `events.yml` a big but not very useful file. Or maybe events get incinerated a couple of days after execution and it makes no sense to have fixtures for them. In any of those situations, you could ignore them from fixtures like this:
 
 ```yaml
 # test/fixture_champagne.yml
@@ -238,7 +241,7 @@ And all your migrations will now have access to your existing factories. If you 
 class CreateInitialEnemy < FixtureChampagne::Migration::Base
   def up
     unless Enemy.find_by(name: "Initial Enemy").present?
-      create(:enemy, name: "Initial Enemy", level: levels(:first_level)) 
+      create(:enemy, name: "Initial Enemy", level: levels(:first_level))
     end
   end
 
@@ -259,6 +262,7 @@ The following fixture features are not supported:
 - Fixture label interpolation (favoured configuration)
 - HABTM (`have_and_belong_to_many`) associations as inline lists
 - Support for YAML defaults (this could be nice)
+- Overwriting multiple fixture paths
 
 As stated before, at least for now, fixtures files that correspond to attachments will be copied as they are. This means:
 - This fixtures must be generated manually

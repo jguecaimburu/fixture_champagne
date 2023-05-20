@@ -11,7 +11,11 @@ module FixtureChampagne
     include ActiveRecord::TestFixtures
 
     included do
-      self.fixture_path = MigrationContext.fixtures_path
+      if respond_to?(:fixture_paths)
+        self.fixture_paths = MigrationContext.fixture_paths
+      else
+        self.fixture_path = MigrationContext.fixture_paths.first
+      end
       fixtures :all
     end
 

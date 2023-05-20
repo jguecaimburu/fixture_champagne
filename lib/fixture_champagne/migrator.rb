@@ -14,17 +14,11 @@ module FixtureChampagne
 
     attr_reader :direction, :migrations, :target_migration_version, :target_schema_version, :configuration
 
+    TMP_FIXTURE_PATH = Rails.root.join("tmp", "fixtures")
+
     class << self
       def fixture_unique_id(table_name:, id:)
         "#{table_name}_#{id}"
-      end
-
-      def tmp_fixture_path
-        Rails.root.join("tmp", "fixtures")
-      end
-
-      def fixture_attachment_folders
-        %w[files active_storage action_text].map { |f| fixture_path.join(f) }
       end
     end
 
@@ -163,20 +157,24 @@ module FixtureChampagne
     end
 
     def setup_temporary_fixtures_dir
-      FileUtils.rm_r(self.class.tmp_fixture_path, secure: true) if self.class.tmp_fixture_path.exist?
-      FileUtils.mkdir(self.class.tmp_fixture_path)
+      FileUtils.rm_r(TMP_FIXTURE_PATH, secure: true) if TMP_FIXTURE_PATH.exist?
+      FileUtils.mkdir(TMP_FIXTURE_PATH)
     end
 
     def copy_fixture_attachments
-      self.class.fixture_attachment_folders.each do |folder|
-        FileUtils.cp_r(folder, self.class.tmp_fixture_path) if folder.exist?
+      fixture_attachment_folders.each do |folder|
+        FileUtils.cp_r(folder, TMP_FIXTURE_PATH) if folder.exist?
       end
+    end
+
+    def fixture_attachment_folders
+      %w[files active_storage action_text].map { |f| effective_fixture_path.join(f) }
     end
 
     def temporary_fixture_filename(klass)
       parts = klass.to_s.split("::").map(&:underscore)
       parts << parts.pop.pluralize.concat(".yml")
-      self.class.tmp_fixture_path.join(*parts)
+      TMP_FIXTURE_PATH.join(*parts)
     end
 
     def create_temporary_fixture_file(data, filename)
@@ -188,10 +186,34 @@ module FixtureChampagne
     end
 
     def overwrite_fixtures
-      removable_fixture_path = self.class.fixture_path.dirname.join("old_fixtures")
-      FileUtils.mv(self.class.fixture_path, removable_fixture_path)
-      FileUtils.mv(self.class.tmp_fixture_path, self.class.fixture_path)
+      removable_fixture_path = effective_fixture_path.dirname.join("old_fixtures")
+      FileUtils.mv(effective_fixture_path, removable_fixture_path)
+      FileUtils.mv(TMP_FIXTURE_PATH, effective_fixture_path)
       FileUtils.rm_r(removable_fixture_path, secure: true)
+    end
+
+    def effective_fixture_path
+      @effective_fixture_path ||= set_effective_fixture_path
+    end
+
+    def set_effective_fixture_path
+      # From Rails 7.1 users can set multiple fixture paths, the default being test/fixtures.
+      # Most users will use the default path. Others may use a custom path but keep the default in the array,
+      # even if they do not use it. For now the gem supports only these 2 cases.
+      # If a user has fixture files in multiple paths, then it's trickier to decide where to save the new
+      # generated fixtures, so for now the gem will not allow these users to overwrite current files.
+
+      paths_with_files = MigrationContext.fixture_paths.select do |path|
+        Dir[::File.join(path, "{**,*}/*.{yml}")].any?
+      end
+
+      if paths_with_files.size > 1 && configuration.overwrite_fixtures?
+        raise OverwriteNotAllowedError,
+              "can't overwrite fixtures when using multiple folders: #{path_with_files.to_json}. Set overwrite to false"
+      end
+
+      # If all folders are still empty, use the first one
+      paths_with_files.first || MigrationContext.fixture_paths
     end
 
     def remember_new_fixture_versions

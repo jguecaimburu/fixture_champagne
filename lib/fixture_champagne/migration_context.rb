@@ -4,7 +4,7 @@ module FixtureChampagne
   # MigrationContext sets the context in which a fixture migration is run.
   #
   # A migration context checks where the application files are located, which could be
-  # in /test if the app uses Minitest or /spec if the app uses Rspec, and from that base
+  # in /test if the app uses Minitest or /spec if the app uses RSpec, and from that base
   # it decides where everything else is located:
   # - Fixture migrations folder
   # - Configuration YAML file
@@ -14,6 +14,9 @@ module FixtureChampagne
   # With all that it decides which migrations are pending, which are executed and the target
   # versions. Depending on the method called, it also decides the direction the Migrator should execute.
   class MigrationContext
+    MINITEST_PATH = Rails.root.join("test")
+    RSPEC_PATH = Rails.root.join("spec")
+
     class << self
       def migrate
         raise NotInTestEnvironmentError unless Rails.env.test?
@@ -46,16 +49,17 @@ module FixtureChampagne
       end
 
       def test_suite_folder_path
-        rspec_path = Rails.root.join("test")
-        minitest_path = Rails.root.join("spec")
-
-        if minitest_path.exist?
-          minitest_path
-        elsif rspec_path.exist?
-          rspec_path
+        if test_framework == :rspec && RSPEC_PATH.exist?
+          RSPEC_PATH
+        elsif MINITEST_PATH.exist?
+          MINITEST_PATH
         else
-          raise "No test nor spec folder found"
+          raise "No test nor spec folder found. Tried: #{[MINITEST_PATH, RSPEC_PATH].to_json}"
         end
+      end
+
+      def test_framework
+        ::Rails.application.config.generators.options[:rails][:test_framework]
       end
 
       def schema_current_version
@@ -86,8 +90,21 @@ module FixtureChampagne
         test_suite_folder_path.join("fixture_champagne.yml")
       end
 
-      def fixtures_path
-        test_suite_folder_path.join("fixtures")
+      def fixture_paths
+        paths = if test_framework == :rspec
+                  rspec_fixture_paths
+                else
+                  minitest_fixture_paths
+                end
+        paths.map { |p| Pathname.new(p) }
+      end
+
+      def minitest_fixture_paths
+        MinitestConfig.new(MINITEST_PATH).fixture_paths
+      end
+
+      def rspec_fixture_paths
+        RSpecConfig.new(RSPEC_PATH).fixture_paths
       end
     end
 
@@ -208,6 +225,49 @@ module FixtureChampagne
 
       def ignored_tables
         @configuration_data["ignore"].to_a || []
+      end
+    end
+
+    # RSpecConfig loads RSpec configuration
+    class RSpecConfig
+      attr_reader :rspec_path
+
+      def initialize(rspec_path)
+        @rspec_path = rspec_path
+      end
+
+      def fixture_paths
+        $LOAD_PATH.unshift(rspec_path)
+        require "rspec/rails"
+        require_relative rspec_path.join("rails_helper").to_s
+
+        if RSpec.configuration.respond_to?(:fixture_paths=)
+          RSpec.configuration.fixture_paths
+        else
+          Array(RSpec.configuration.fixture_path)
+        end
+      end
+    end
+
+    # MinitestConfig loads Minitest configuration
+    class MinitestConfig
+      attr_reader :minitest_path
+
+      def initialize(minitest_path)
+        @minitest_path = minitest_path
+      end
+
+      def fixture_paths
+        # Monkey patching Minitest to avoid autorun
+        Minitest.define_singleton_method(:autorun) { nil }
+
+        require "rails/test_help"
+
+        if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
+          ActiveSupport::TestCase.fixture_paths
+        else
+          Array(ActiveSupport::TestCase.fixture_path)
+        end
       end
     end
   end
