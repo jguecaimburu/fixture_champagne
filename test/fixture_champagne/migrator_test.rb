@@ -26,7 +26,7 @@ class MigratorTest < ActiveSupport::TestCase
   # FIXME: This logic might find a better place elsewhere. For now, it's only used here as parsing
   #        fixture files without initializing records is not required in any other process
   def parse_temporary_fixture_folder
-    Dir.glob("#{FixtureChampagne::Migrator.tmp_fixture_path}/**/*.yml").each_with_object({}) do |path, mapping|
+    Dir.glob("#{FixtureChampagne::Migrator::TMP_FIXTURE_PATH}/**/*.yml").each_with_object({}) do |path, mapping|
       key = path.scan(%r{.*/fixtures/(.*)\.yml}).first.first
       mapping[key] = {}
       ActiveRecord::FixtureSet::File.open(path).each { |row| mapping[key][row.first] = row.last }
@@ -34,7 +34,7 @@ class MigratorTest < ActiveSupport::TestCase
   end
 
   def remove_temporary_fixture_folder
-    FileUtils.rm_rf(FixtureChampagne::Migrator.tmp_fixture_path)
+    FileUtils.rm_rf(FixtureChampagne::Migrator::TMP_FIXTURE_PATH)
   end
 
   setup do
@@ -49,7 +49,7 @@ class MigratorTest < ActiveSupport::TestCase
   teardown { remove_temporary_fixture_folder }
 
   test "tmp_fixture_path" do
-    assert_equal(FixtureChampagne::Migrator.tmp_fixture_path, Rails.root.join("tmp", "fixtures"))
+    assert_equal(FixtureChampagne::Migrator::TMP_FIXTURE_PATH, Rails.root.join("tmp", "fixtures"))
   end
 
   test "fixture_attachment_folders" do
